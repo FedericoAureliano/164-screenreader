@@ -11,7 +11,7 @@ let rec get_coordinates_helper (p: path): int * int =
       | (x, 0) -> (x - 1, 0) 
       | (x, _) -> (x, 0)
     end
-  | Right::ps -> let (x, y) = get_coordinates_helper ps in (x + 1, y)
+  | Right::ps -> let (x, _) = get_coordinates_helper ps in (x + 1, 0)
   | Down::ps -> let (x, y) = get_coordinates_helper ps in (x, y + 1)
   | Up::ps -> let (x, y) = get_coordinates_helper ps in (x, y - 1)
 
