@@ -2,6 +2,13 @@ open S_exp
 open Util
 
 type directions = Left | Right | Down | Up
+
+let get_relative_direction d = match d with
+  | Left -> "to the left"
+  | Right -> "to the right"
+  | Down -> "below"
+  | Up -> "above"
+
 type path = directions list
 
 let rec get_coordinates_helper (p: path): int * int = 
@@ -35,9 +42,14 @@ let read_expr e =
   | Lst (Sym f::args) -> Printf.sprintf "%s expressions, %d inputs\n" f (List.length args) 
   | Sym f -> f
   | Num n -> string_of_int n
-  | _ -> "Can't read expression at that position\n"
+  | _ -> "Malformed s-expression\n"
 
-let read_position (defns: defn list) (p: path) : string =
+let rec get_error (defns: defn list) (body: s_exp) (p: path) : string =
+  match List.rev p with
+  | [] -> "Empty program\n"
+  | x::xs -> Printf.sprintf "No expression %s of %s" (get_relative_direction x) (read_position defns body xs)
+
+and read_position (defns: defn list) (body: s_exp) (p: path) : string =
   let (n, d) = get_coordinates p in
   match List.nth_opt defns n with
   | Some defn when d = 0 -> Printf.sprintf "%s: a function definition with %d arguments: %s\n" defn.name (List.length defn.args) (String.concat " and " defn.args)
@@ -47,11 +59,17 @@ let read_position (defns: defn list) (p: path) : string =
   | Some defn when d - 3 >= List.length defn.args -> 
     begin match (bfs defn.body (d-3- (List.length defn.args))) with
       | Some e -> Printf.sprintf "%s\n" (read_expr e)
-      | _ -> Printf.sprintf "no expression at that position\n"
+      | _ -> get_error defns body p
     end
-  | _ -> Printf.sprintf "no expression at that position\n"
+  | None when n = List.length defns && d = 0 -> Printf.sprintf "The body of the program\n"
+  | None when n = List.length defns && d > 0 ->
+    begin match (bfs body d) with
+      | Some e -> Printf.sprintf "%s\n" (read_expr e)
+      | _ -> get_error defns body p
+    end
+  | _ -> get_error defns body p
 
 let navigate (program : string) (p: path) : unit =
-  let defns, _ = parse_many program |> defns_and_body in
-  let text = read_position defns p in
+  let defns, body = parse_many program |> defns_and_body in
+  let text = read_position defns body p in
   Sys.command (Printf.sprintf "say \"%s\"" text) |> ignore;
