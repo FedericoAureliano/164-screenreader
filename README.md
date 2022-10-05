@@ -6,7 +6,6 @@ To run:
 
 Inside utop:
 
-`open Cs164.Compile;;`
+`open Cs164.Screenreader;;`
 
-`compile_and_run "(define (fib n) (if (< n 2) n (+ (fib (- n 1)) (fib (- n 2)))))
-(print (fib (read-num)))";;`
+`navigate "(define (f x y) (+ x y))(define (g x) (f x x))(print (f 4 5))";;`
