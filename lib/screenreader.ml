@@ -37,20 +37,21 @@ let read_expr e =
   | Num n -> string_of_int n
   | _ -> "Can't read expression at that position\n"
 
-let read_position (defns: defn list) (p: path) : unit =
+let read_position (defns: defn list) (p: path) : string =
   let (n, d) = get_coordinates p in
   match List.nth_opt defns n with
-  | Some defn when d = 0 -> Printf.printf "%s: a function definition with %d arguments: %s\n" defn.name (List.length defn.args) (String.concat " and " defn.args)
-  | Some defn when d = 1 -> Printf.printf "%s\n" defn.name
-  | Some defn when d = 2 -> Printf.printf "%d arguments: %s\n" (List.length defn.args) (String.concat " and " defn.args)
-  | Some defn when d > 2 && d - 3 < List.length defn.args -> Printf.printf "%s\n" (List.nth defn.args (d - 3))
+  | Some defn when d = 0 -> Printf.sprintf "%s: a function definition with %d arguments: %s\n" defn.name (List.length defn.args) (String.concat " and " defn.args)
+  | Some defn when d = 1 -> Printf.sprintf "%s\n" defn.name
+  | Some defn when d = 2 -> Printf.sprintf "%d arguments: %s\n" (List.length defn.args) (String.concat " and " defn.args)
+  | Some defn when d > 2 && d - 3 < List.length defn.args -> Printf.sprintf "%s\n" (List.nth defn.args (d - 3))
   | Some defn when d - 3 >= List.length defn.args -> 
     begin match (bfs defn.body (d-3- (List.length defn.args))) with
-      | Some e -> Printf.printf "%s\n" (read_expr e)
-      | _ -> Printf.printf "no expression at that position\n"
+      | Some e -> Printf.sprintf "%s\n" (read_expr e)
+      | _ -> Printf.sprintf "no expression at that position\n"
     end
-  | _ -> Printf.printf "no expression at that position\n"
+  | _ -> Printf.sprintf "no expression at that position\n"
 
 let navigate (program : string) (p: path) : unit =
   let defns, _ = parse_many program |> defns_and_body in
-  read_position defns p
+  let text = read_position defns p in
+  Sys.command (Printf.sprintf "say \"%s\"" text) |> ignore;
